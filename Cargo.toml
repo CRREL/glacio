@@ -1,0 +1,13 @@
+[package]
+name = "glacio"
+version = "0.1.0"
+authors = ["Pete Gadomski <pete.gadomski@gmail.com>"]
+
+[dependencies]
+camera = { path = "camera" }
+chrono = "0.4"
+clap = "2.32"
+prettytable-rs = "0.7"
+
+[workspace]
+members = ["camera"]
