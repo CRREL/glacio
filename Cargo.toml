@@ -4,10 +4,13 @@ version = "0.1.0"
 authors = ["Pete Gadomski <pete.gadomski@gmail.com>"]
 
 [dependencies]
+actix-web = "*"
 camera = { path = "camera" }
 chrono = "0.4"
 clap = "2.32"
+listenfd = "0.3"
 prettytable-rs = "0.7"
+web = { path = "web" }
 
 [workspace]
-members = ["camera"]
+members = ["camera", "web"]
