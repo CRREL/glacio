@@ -6,7 +6,7 @@ authors = ["Pete Gadomski <pete.gadomski@gmail.com>"]
 [dependencies]
 actix-web = "0.7"
 camera = { path = "../camera" }
-failure = "*"
-serde = "*"
-serde_derive = "*"
-toml = "*"
+failure = "0.1"
+serde = "1.0"
+serde_derive = "1.0"
+toml = "0.4"
