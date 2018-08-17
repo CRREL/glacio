@@ -15,7 +15,6 @@ use std::collections::BTreeMap;
 use std::net::ToSocketAddrs;
 
 fn main() {
-    // TODO support an rc file.
     let matches = App::new("glacio")
         .author("Pete Gadomski <pete@gadom.ski>")
         .subcommand(
