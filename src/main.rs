@@ -1,3 +1,21 @@
+//! An executable and libraries for handling glacier research data.
+//!
+//! We maintain a slew of remote cameras, weather stations, and LiDAR systems throught cold
+//! regions. This crate and sub-crates are our programmatic interface to all of these data.
+//!
+//! # The executable
+//!
+//! This top-level crate contains only the `glacio` executable. Run `glacio --help` to see this
+//! executable's powers.
+//!
+//! # The libraries
+//!
+//! This crate is also a workspace for sub-crates. These sub-crates are all libraries for working
+//! with specific types of data, e.g. `camera` for working with remote camera images. See those
+//! crate's documentation for more information.
+
+#![deny(missing_docs, missing_debug_implementations, unsafe_code)]
+
 extern crate actix_web;
 extern crate camera;
 extern crate chrono;
