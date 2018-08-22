@@ -19,6 +19,7 @@
 extern crate actix_web;
 extern crate camera;
 extern crate chrono;
+#[macro_use]
 extern crate clap;
 extern crate listenfd;
 #[macro_use]
@@ -27,43 +28,14 @@ extern crate web;
 
 use camera::Camera;
 use chrono::Utc;
-use clap::{App, Arg, SubCommand};
+use clap::App;
 use prettytable::{format, Table};
 use std::collections::BTreeMap;
 use std::net::ToSocketAddrs;
 
 fn main() {
-    let matches = App::new("glacio")
-        .author("Pete Gadomski <pete@gadom.ski>")
-        .subcommand(
-            SubCommand::with_name("cameras").arg(
-                Arg::with_name("ROOT")
-                    .help("the root path of all of the camera files")
-                    .required(true)
-                    .index(1),
-            ),
-        )
-        .subcommand(
-            SubCommand::with_name("serve")
-                .arg(
-                    Arg::with_name("ADDR")
-                        .help("the address from which to serve the json api")
-                        .required(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("CONFIG")
-                        .help("the path to the configuration toml file")
-                        .required(true)
-                        .index(2),
-                )
-                .arg(
-                    Arg::with_name("auto-reload")
-                        .long("auto-reload")
-                        .help("enable the auto-reloading development server"),
-                ),
-        )
-        .get_matches();
+    let yaml = load_yaml!("cli.yml");
+    let matches = App::from_yaml(yaml).get_matches();
 
     if let Some(matches) = matches.subcommand_matches("cameras") {
         let root = matches.value_of("ROOT").unwrap();

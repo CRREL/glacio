@@ -1,0 +1,25 @@
+name: glacio
+author: Pete Gadomski <pete.gadomski@gmail.com>
+about: Interface with remote glacier research data
+subcommands:
+    - cameras:
+        about: Remote cameras
+        args:
+            - ROOT:
+                help: The root directory for all of the camera images
+                required: true
+                index: 1
+    - serve:
+        about: Serve glacier research data via a JSON API
+        args:
+            - ADDR:
+                help: The address from which to serve the API
+                required: true
+                index: 1
+            - CONFIG:
+                help: The path to the TOML configuration file
+                required: true
+                index: 2
+            - auto-reload:
+                help: Enable auto-reloading of the server (used during development)
+                long: auto-reload
