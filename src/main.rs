@@ -93,7 +93,7 @@ fn serve<S: ToSocketAddrs>(addr: S, state: web::State, auto_reload: bool) {
     if auto_reload {
         use listenfd::ListenFd;
         let mut listenfd = ListenFd::from_env();
-        let mut server = actix_web::server::new(move || web::app(state.clone()));
+        let mut server = actix_web::server::new(move || web::create_app(state.clone()));
         server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {
             server.listen(l)
         } else {
@@ -101,7 +101,7 @@ fn serve<S: ToSocketAddrs>(addr: S, state: web::State, auto_reload: bool) {
         };
         server.run();
     } else {
-        actix_web::server::new(move || web::app(state.clone()))
+        actix_web::server::new(move || web::create_app(state.clone()))
             .bind(addr)
             .unwrap()
             .run()
