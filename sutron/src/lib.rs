@@ -12,4 +12,5 @@ extern crate sbd;
 pub mod message;
 pub mod packet;
 
+pub use message::Message;
 pub use packet::Packet;

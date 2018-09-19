@@ -13,4 +13,4 @@ prettytable-rs = "0.7"
 web = { path = "web" }
 
 [workspace]
-members = ["camera", "sutron", "web"]
+members = ["atlas", "camera", "sutron", "web"]

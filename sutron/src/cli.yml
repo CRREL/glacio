@@ -1,0 +1,11 @@
+name: sutron
+author: Pete Gadomski <pete@gadom.ski>
+about: Work with Sutron Iridium messages.
+subcommands:
+    - reassemble:
+        about: reassembles a single message from multiple SBD message (Sutron packets)
+        args:
+            - PATH:
+                help: path to an SBD file
+                required: true
+                multiple: true

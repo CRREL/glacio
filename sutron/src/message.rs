@@ -72,6 +72,16 @@ impl Message {
     }
 }
 
+impl From<Vec<u8>> for Message {
+    fn from(data: Vec<u8>) -> Message {
+        Message {
+            data: data,
+            datetime: None,
+            packets: Vec::new(),
+        }
+    }
+}
+
 impl Reassembler {
     /// Creates a new reassembler.
     ///
@@ -197,5 +207,14 @@ mod tests {
         assert_eq!(None, reassembler.add(packet_c));
         let message = reassembler.add(packet_b).unwrap();
         assert_eq!(b"cbc".as_ref(), message.data.as_slice());
+    }
+
+    #[test]
+    fn message_from_vec() {
+        let data = vec![0u8, 42u8];
+        let message = Message::from(data);
+        assert_eq!(vec![0u8, 42u8], message.data);
+        assert_eq!(None, message.datetime);
+        assert_eq!(Vec::<Packet>::new(), message.packets);
     }
 }
