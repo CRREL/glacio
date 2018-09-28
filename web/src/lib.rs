@@ -123,7 +123,7 @@ mod tests {
         let camera = &cameras[0];
         assert_eq!("ATLAS_CAM", camera.id);
         assert_eq!("ATLAS context", camera.name);
-        assert_eq!("http://localhost/cameras/ATLAS_CAM", camera.url);
+        assert!(camera.url.ends_with("/cameras/ATLAS_CAM"));
     }
 
     #[test]
@@ -131,6 +131,6 @@ mod tests {
         let camera: Camera = get("/cameras/ATLAS_CAM");
         assert_eq!("ATLAS_CAM", camera.id);
         assert_eq!("ATLAS context", camera.name);
-        assert_eq!("http://localhost/cameras/ATLAS_CAM", camera.url);
+        assert!(camera.url.ends_with("/cameras/ATLAS_CAM"));
     }
 }
