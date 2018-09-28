@@ -100,8 +100,6 @@ impl Camera {
 
     /// Returns this camera's interval, as determined by its images.
     ///
-    /// We choose the mode of the image intervals.
-    ///
     /// # Examples
     ///
     /// ```
