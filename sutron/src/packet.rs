@@ -1,7 +1,4 @@
-//! Individual Sutron message packets.
-//!
-//! Packets can be re-assembled into messages. Packets tend to correspond one-to-one to sbd
-//! messages.
+//! Sutron message packets, which correspond roughly one-to-one with Iridium SBD messages.
 
 use chrono::{DateTime, Utc};
 use failure::Error as FailureError;
@@ -11,7 +8,28 @@ use std::path::Path;
 const LOOK_TO_NEXT_BYTE_FOR_MEANING: u8 = b'~';
 const SUB_HEADER_TERMINATOR: u8 = b':';
 
-/// A single SBD message.
+/// A single SBD message, that can be part of or a whole Sutron message.
+///
+/// # Examples
+///
+/// You can read packets from the filesystem:
+///
+/// ```
+/// use sutron::{Packet, packet::Type};
+/// let packet = Packet::from_path("fixtures/self-timed.sbd").unwrap();
+/// assert_eq!(Type::SelfTimed, packet.type_());
+/// assert!(packet.message().is_some());
+/// ```
+///
+/// Or you can construct them yourself:
+///
+/// ```
+/// # use sutron::{Packet, packet::Type};
+/// let packet = Packet::new(b"0test message").unwrap();
+/// assert_eq!(Type::SelfTimed, packet.type_());
+/// assert_eq!(b"test message", packet.data());
+/// assert_eq!(None, packet.message());
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Packet {
     data: Vec<u8>,
@@ -193,7 +211,7 @@ impl Packet {
         })
     }
 
-    /// Returns true if this packet starts a new message.
+    /// Returns true if this packet starts a new Sutron message.
     ///
     /// True for non-extended packets or extended packets with a `total_bytes` field.
     ///
@@ -274,7 +292,7 @@ impl Packet {
 
     /// Returns a reference to this packet's message.
     ///
-    /// Only populated if this packet was created from an sbd message.
+    /// Only populated if this packet was created from an SBD message.
     ///
     /// # Examples
     ///
@@ -347,95 +365,91 @@ where
 mod tests {
     use super::*;
 
-    mod packet {
-        use super::*;
+    #[test]
+    fn from_file() {
+        let packet = Packet::from_path("fixtures/self-timed-extended-0.sbd").unwrap();
+        assert_eq!(Type::SelfTimed, packet.type_());
+        assert_eq!(None, packet.station_name());
+        let sub_header = packet.sub_header().unwrap();
+        assert_eq!(26, sub_header.id);
+        assert_eq!(0, sub_header.start_byte);
+        assert_eq!(Some(433), sub_header.total_bytes);
 
-        #[test]
-        fn from_file() {
-            let packet = Packet::from_path("fixtures/self-timed-extended-0.sbd").unwrap();
-            assert_eq!(Type::SelfTimed, packet.type_());
-            assert_eq!(None, packet.station_name());
-            let sub_header = packet.sub_header().unwrap();
-            assert_eq!(26, sub_header.id);
-            assert_eq!(0, sub_header.start_byte);
-            assert_eq!(Some(433), sub_header.total_bytes);
+        let packet = Packet::from_path("fixtures/forced.sbd").unwrap();
+        assert_eq!(
+            b"test message from pete at ATLAS North 2018-07-30 1235".as_ref(),
+            packet.data()
+        );
+    }
 
-            let packet = Packet::from_path("fixtures/forced.sbd").unwrap();
-            assert_eq!(
-                b"test message from pete at ATLAS North 2018-07-30 1235".as_ref(),
-                packet.data()
-            );
-        }
+    #[test]
+    fn new() {
+        assert_eq!(
+            Error::MissingPacketTypeByte,
+            Packet::new(b"").unwrap_err().downcast().unwrap()
+        );
+        assert_eq!(
+            Error::LeadingSubHeaderCharacters("2".to_string()),
+            Packet::new(b"12,:").unwrap_err().downcast().unwrap()
+        );
+        assert_eq!(
+            Error::MissingId,
+            Packet::new(b"1:").unwrap_err().downcast().unwrap()
+        );
+        assert_eq!(
+            Error::MissingStartByte,
+            Packet::new(b"1,42:").unwrap_err().downcast().unwrap()
+        );
 
-        #[test]
-        fn new() {
-            assert_eq!(
-                Error::MissingPacketTypeByte,
-                Packet::new(b"").unwrap_err().downcast().unwrap()
-            );
-            assert_eq!(
-                Error::LeadingSubHeaderCharacters("2".to_string()),
-                Packet::new(b"12,:").unwrap_err().downcast().unwrap()
-            );
-            assert_eq!(
-                Error::MissingId,
-                Packet::new(b"1:").unwrap_err().downcast().unwrap()
-            );
-            assert_eq!(
-                Error::MissingStartByte,
-                Packet::new(b"1,42:").unwrap_err().downcast().unwrap()
-            );
+        let packet = Packet::new(b"1,42,16:").unwrap();
+        let sub_header = packet.sub_header.unwrap();
+        assert_eq!(42, sub_header.id);
+        assert_eq!(16, sub_header.start_byte);
+        assert_eq!(None, sub_header.total_bytes);
 
-            let packet = Packet::new(b"1,42,16:").unwrap();
-            let sub_header = packet.sub_header.unwrap();
-            assert_eq!(42, sub_header.id);
-            assert_eq!(16, sub_header.start_byte);
-            assert_eq!(None, sub_header.total_bytes);
+        let packet = Packet::new(b"1,42,16,22:").unwrap();
+        let sub_header = packet.sub_header.unwrap();
+        assert_eq!(42, sub_header.id);
+        assert_eq!(16, sub_header.start_byte);
+        assert_eq!(Some(22), sub_header.total_bytes);
 
-            let packet = Packet::new(b"1,42,16,22:").unwrap();
-            let sub_header = packet.sub_header.unwrap();
-            assert_eq!(42, sub_header.id);
-            assert_eq!(16, sub_header.start_byte);
-            assert_eq!(Some(22), sub_header.total_bytes);
+        let packet = Packet::new(b"1,42,16,N=ATLAS:").unwrap();
+        assert_eq!(Some("ATLAS"), packet.station_name());
+        let sub_header = packet.sub_header.unwrap();
+        assert_eq!(42, sub_header.id);
+        assert_eq!(16, sub_header.start_byte);
+        assert_eq!(None, sub_header.total_bytes);
 
-            let packet = Packet::new(b"1,42,16,N=ATLAS:").unwrap();
-            assert_eq!(Some("ATLAS"), packet.station_name());
-            let sub_header = packet.sub_header.unwrap();
-            assert_eq!(42, sub_header.id);
-            assert_eq!(16, sub_header.start_byte);
-            assert_eq!(None, sub_header.total_bytes);
+        let packet = Packet::new(b"1,42,16,22,N=ATLAS:").unwrap();
+        assert_eq!(Some("ATLAS"), packet.station_name());
+        let sub_header = packet.sub_header.unwrap();
+        assert_eq!(42, sub_header.id);
+        assert_eq!(16, sub_header.start_byte);
+        assert_eq!(Some(22), sub_header.total_bytes);
 
-            let packet = Packet::new(b"1,42,16,22,N=ATLAS:").unwrap();
-            assert_eq!(Some("ATLAS"), packet.station_name());
-            let sub_header = packet.sub_header.unwrap();
-            assert_eq!(42, sub_header.id);
-            assert_eq!(16, sub_header.start_byte);
-            assert_eq!(Some(22), sub_header.total_bytes);
+        assert_eq!(
+            Error::InvalidStationNameField("ATLAS".to_string()),
+            Packet::new(b"1,42,16,22,ATLAS:")
+                .unwrap_err()
+                .downcast()
+                .unwrap()
+        );
+        assert_eq!(
+            Error::TrailingSubHeaderCharacters(",foobar".to_string()),
+            Packet::new(b"1,42,16,22,N=ATLAS,foobar:")
+                .unwrap_err()
+                .downcast()
+                .unwrap()
+        );
 
-            assert_eq!(
-                Error::InvalidStationNameField("ATLAS".to_string()),
-                Packet::new(b"1,42,16,22,ATLAS:")
-                    .unwrap_err()
-                    .downcast()
-                    .unwrap()
-            );
-            assert_eq!(
-                Error::TrailingSubHeaderCharacters(",foobar".to_string()),
-                Packet::new(b"1,42,16,22,N=ATLAS,foobar:")
-                    .unwrap_err()
-                    .downcast()
-                    .unwrap()
-            );
-
-            let packet = Packet::new(b"0").unwrap();
-            assert_eq!(None, packet.station_name());
-            let packet = Packet::new(b"0,N=ATLAS:beers").unwrap();
-            assert_eq!(Some("ATLAS"), packet.station_name());
-            assert_eq!(b"beers", packet.data());
-            let packet = Packet::new(b"0,ATLAS:").unwrap();
-            assert_eq!(None, packet.station_name());
-            assert_eq!(b",ATLAS:", packet.data());
-        }
+        let packet = Packet::new(b"0").unwrap();
+        assert_eq!(None, packet.station_name());
+        let packet = Packet::new(b"0,N=ATLAS:beers").unwrap();
+        assert_eq!(Some("ATLAS"), packet.station_name());
+        assert_eq!(b"beers", packet.data());
+        let packet = Packet::new(b"0,ATLAS:").unwrap();
+        assert_eq!(None, packet.station_name());
+        assert_eq!(b",ATLAS:", packet.data());
     }
 
     #[test]

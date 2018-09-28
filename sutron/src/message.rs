@@ -1,4 +1,33 @@
-//! Full messages from the data logger, which may or may not be broken up over multiple packets.
+//! Reconstructed Sutron messages, which are built from one or more packets.
+//!
+//! # Examples
+//!
+//! Use a `Reassembler` to build messages from packets that may not come in order:
+//!
+//! ```
+//! use sutron::{message::Reassembler, Packet};
+//! let packet_a = Packet::new(b"1,42,0,2:a").unwrap();
+//! let packet_standalone = Packet::new(b"0test message").unwrap();
+//! let packet_b = Packet::new(b"1,42,1:b").unwrap();
+//! let mut reassembler = Reassembler::new();
+//!
+//! assert_eq!(None, reassembler.add(packet_a));
+//!
+//! let message_standalone = reassembler.add(packet_standalone).unwrap();
+//! assert_eq!(b"test message".to_vec(), message_standalone.data);
+//!
+//! let message_multipacket = reassembler.add(packet_b).unwrap();
+//! assert_eq!(b"ab".to_vec(), message_multipacket.data);
+//! ```
+//!
+//! If you know the packets are in order, you can create a message directly:
+//!
+//! ```
+//! use sutron::{Packet, Message};
+//! let packet_a = Packet::new(b"1,42,0,2:a").unwrap();
+//! let packet_b = Packet::new(b"1,42,1:b").unwrap();
+//! let message = Message::new(vec![packet_a, packet_b]).unwrap();
+//! ```
 
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
@@ -23,22 +52,52 @@ pub struct Message {
 #[derive(Debug, Default)]
 pub struct Reassembler {
     packet_map: HashMap<u8, Vec<Packet>>,
+    recycle_bin: Vec<Packet>,
 }
 
-#[derive(Debug)]
-enum Error {
-    DataLengthMismatch { sub_header: usize, actual: usize },
+/// Errors associated with creating messages.
+#[derive(Debug, Fail)]
+pub enum Error {
+    /// The length of the data does not match the length advertised in the header.
+    #[fail(
+        display = "the size was advertised as {} bytes but was actually {} bytes",
+        sub_header,
+        actual
+    )]
+    DataLengthMismatch {
+        /// The size as advertised in the packet sub-header.
+        sub_header: usize,
+
+        /// The actual length of the data.
+        actual: usize,
+    },
+
+    /// There are no packets from which to create this message.
+    #[fail(display = "there are no packets from which to create the message")]
     NoPackets,
+
+    /// There is no total bytes field in the first packet of the extended message.
+    #[fail(display = "there is no total bytes field in the sub header of the first packet")]
     NoTotalBytes(Packet),
 }
 
 impl Message {
-    fn new(packets: &[Packet]) -> Result<Message, Error> {
+    /// Creates a new message from one or more packets.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use sutron::{Packet, Message};
+    /// let packet = Packet::new(b"0self-timed").unwrap();
+    /// let message = Message::new(vec![packet]).unwrap();
+    /// ```
+    pub fn new(mut packets: Vec<Packet>) -> Result<Message, Error> {
         if packets.is_empty() {
             return Err(Error::NoPackets);
         }
-        let start_packet = &packets[0];
-        if let Some(sub_header) = start_packet.sub_header() {
+        let sub_header = &packets[0].sub_header();
+        let datetime = packets[0].datetime();
+        if let Some(sub_header) = sub_header {
             if let Some(total_bytes) = sub_header.total_bytes {
                 let data = packets.iter().map(|p| p.data()).fold(
                     Vec::new(),
@@ -50,8 +109,8 @@ impl Message {
                 if data.len() == total_bytes {
                     Ok(Message {
                         data: data,
-                        datetime: start_packet.datetime(),
-                        packets: packets.to_vec(),
+                        datetime: datetime,
+                        packets: packets,
                     })
                 } else {
                     Err(Error::DataLengthMismatch {
@@ -60,13 +119,13 @@ impl Message {
                     })
                 }
             } else {
-                Err(Error::NoTotalBytes(start_packet.clone()))
+                Err(Error::NoTotalBytes(packets.remove(0)))
             }
         } else {
             Ok(Message {
-                data: start_packet.data().to_vec(),
-                datetime: start_packet.datetime(),
-                packets: packets.to_vec(),
+                data: packets[0].data().to_vec(),
+                datetime: datetime,
+                packets: packets,
             })
         }
     }
@@ -95,7 +154,7 @@ impl Reassembler {
         Reassembler::default()
     }
 
-    /// Adds a new packet to the reassembler, and returns a message if one was completed.
+    /// Adds a new packet to the reassembler and returns a message if one was completed.
     ///
     /// # Examples
     ///
@@ -112,18 +171,37 @@ impl Reassembler {
                 .entry(sub_header.id)
                 .or_insert_with(Vec::new);
             if packet.is_start_packet() {
-                entry.clear();
+                self.recycle_bin.extend(entry.drain(..))
             }
             entry.push(packet);
-            if let Ok(message) = Message::new(entry) {
+            if let Ok(message) = Message::new(entry.clone()) {
                 entry.clear();
                 Some(message)
             } else {
                 None
             }
         } else {
-            Message::new(&[packet]).ok()
+            Message::new(vec![packet]).ok()
         }
+    }
+
+    /// Returns a reference to all messages that have been discarded by this reassembler.
+    ///
+    /// Messages are discarded when a new start packet comes in with the same id.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use sutron::{Packet, message::Reassembler};
+    /// let packet = Packet::new(b"1,42,0,3:a").unwrap();
+    /// let mut reassembler = Reassembler::new();
+    /// assert_eq!(None, reassembler.add(packet.clone()));
+    /// assert!(reassembler.recycle_bin().is_empty());
+    /// assert_eq!(None, reassembler.add(packet.clone()));
+    /// assert_eq!([packet], reassembler.recycle_bin());
+    /// ```
+    pub fn recycle_bin(&self) -> &[Packet] {
+        &self.recycle_bin
     }
 }
 
@@ -190,10 +268,11 @@ mod tests {
         let packet_b = Packet::new(b"1,42,1:b").unwrap();
         let packet_c = Packet::new(b"1,42,0,2:c").unwrap();
         let mut reassembler = Reassembler::new();
-        assert_eq!(None, reassembler.add(packet_a));
+        assert_eq!(None, reassembler.add(packet_a.clone()));
         assert_eq!(None, reassembler.add(packet_c));
         let message = reassembler.add(packet_b).unwrap();
         assert_eq!(b"cb".as_ref(), message.data.as_slice());
+        assert_eq!([packet_a], reassembler.recycle_bin());
     }
 
     #[test]
