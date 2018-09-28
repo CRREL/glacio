@@ -1,0 +1,15 @@
+name: glacio-web
+author: Pete Gadomski <pete@gadom.ski>
+about: Runs the glacio http server.
+args:
+    - ADDR:
+        help: Sets the address, e.g. "127.0.0.1:3002"
+        required: true
+        index: 1
+    - CONFIG:
+        help: Path to the configuration file.
+        required: true
+        index: 2
+    - auto-reload:
+        long: auto-reload
+        help: Enable auto-reloading of code for development.

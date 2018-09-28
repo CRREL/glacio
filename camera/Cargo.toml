@@ -3,9 +3,16 @@ name = "camera"
 version = "0.1.0"
 authors = ["Pete Gadomski <pete.gadomski@gmail.com>"]
 
+[[bin]]
+name = "glacio-camera"
+path = "src/main.rs"
+doc = false
+
 [dependencies]
 chrono = "0.4"
+clap = { version = "2.32", features = ["yaml"] }
 failure = "0.1"
 lazy_static = "1.1"
+prettytable-rs = "0.8"
 regex = "1.0"
 walkdir = "2.2"

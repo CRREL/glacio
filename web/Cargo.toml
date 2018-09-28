@@ -3,10 +3,17 @@ name = "web"
 version = "0.1.0"
 authors = ["Pete Gadomski <pete.gadomski@gmail.com>"]
 
+[[bin]]
+name = "glacio-web"
+path = "src/main.rs"
+doc = false
+
 [dependencies]
 actix-web = "0.7"
 camera = { path = "../camera" }
+clap = { version = "2.32", features = ["yaml"] }
 failure = "0.1"
+listenfd = "0.3"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"

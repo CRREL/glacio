@@ -1,0 +1,8 @@
+name: glacio-camera
+author: Pete Gadomski <pete@gadom.ski>
+about: Finds images from remote cameras and prints out information about each camera.
+args:
+    - ROOT:
+        help: Path to a root directory that holds all of the camera images.
+        required: true
+        index: 1
