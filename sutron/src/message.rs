@@ -31,6 +31,7 @@
 
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
+use std::path::Path;
 use Packet;
 
 /// A message sent from a Sutron system.
@@ -82,6 +83,21 @@ pub enum Error {
 }
 
 impl Message {
+    /// Creates a new message from a non-extended sbd message in a file.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use sutron::Message;
+    /// let message = Message::from_path("fixtures/self-timed.sbd").unwrap();
+    /// ```
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Message, ::failure::Error> {
+        ::sbd::mo::Message::from_path(path)
+            .map_err(::failure::Error::from)
+            .and_then(|message| Packet::from_message(message))
+            .and_then(|packet| Message::new(vec![packet]).map_err(::failure::Error::from))
+    }
+
     /// Creates a new message from one or more packets.
     ///
     /// # Examples

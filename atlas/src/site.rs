@@ -30,7 +30,7 @@ impl Site {
         let storage = FilesystemStorage::open(path)?;
         Ok(reassemble(storage.messages_from_imei(self.imei())?)?
             .into_iter()
-            .filter_map(|message| Heartbeat::new(message).ok())
+            .filter_map(|message| Heartbeat::new(&message).ok())
             .collect())
     }
 

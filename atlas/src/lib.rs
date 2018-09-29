@@ -1,7 +1,11 @@
-//! Higher-level crate for managing ATLAS status information.
+//! ATLAS status information.
 //!
-//! Most of this information comes in the form of heartbeats, messages sent from ATLAS systems via
-//! Iridium SBD that contain information such as the last scan time, air temperature, etc.
+//! ATLAS is a collection of remote terrestrial LiDAR systems. As of this writing, there are two
+//! ATLAS systems, one on the south and one on the north side of the Helheim Glacier in southeast
+//! Greenland.
+//!
+//! ATLAS systems transmit regularly-scheduled messages called "heartbeats," which contain system
+//! status information.
 
 #![deny(missing_docs, missing_debug_implementations, unsafe_code)]
 
