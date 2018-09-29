@@ -15,7 +15,7 @@ mod config;
 mod state;
 
 use actix_web::error::ErrorNotFound;
-use actix_web::{App, HttpRequest, Json, Result};
+use actix_web::{middleware::cors::Cors, App, HttpRequest, Json, Result};
 pub use config::Config;
 pub use state::State;
 
@@ -29,12 +29,16 @@ pub use state::State;
 /// let app = web::create_app(state);
 /// ```
 pub fn create_app(state: State) -> App<State> {
-    App::with_state(state)
-        .resource("/cameras", |resource| resource.h(cameras))
-        .resource("/cameras/{id}", |resource| {
-            resource.name("camera");
-            resource.h(camera)
-        })
+    App::with_state(state).configure(|app| {
+        Cors::for_app(app)
+            .send_wildcard()
+            .resource("/cameras", |resource| resource.h(cameras))
+            .resource("/cameras/{id}", |resource| {
+                resource.name("camera");
+                resource.h(camera)
+            })
+            .register()
+    })
 }
 
 #[derive(Debug, Deserialize, Serialize)]
