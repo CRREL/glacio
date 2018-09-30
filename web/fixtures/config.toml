@@ -1,3 +1,23 @@
+image_document_root = "fixtures"
+image_server = "http://iridiumcam.lidar.io"
+iridium_sbd_root = "fixtures"
+
+[[sites]]
+id = "south"
+name = "ATLAS South"
+
+[[sites]]
+id = "north"
+name = "ATLAS North"
+
 [[cameras]]
 id = "ATLAS_CAM"
 name = "ATLAS context"
+path = "fixtures/ATLAS_CAM"
+description = "A single camera capturing a wide-angle shot of the ATLAS South system."
+
+[[cameras]]
+id = "DUAL_CAM"
+name = "A dual camera"
+paths = ["fixtures/DUAL_CAM/StarDot1", "fixtures/DUAL_CAM/StarDot2"]
+description = "Two cameras focused on a really cool thing."

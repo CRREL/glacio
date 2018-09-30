@@ -1,4 +1,3 @@
-use failure::Error;
 use sbd::storage::{FilesystemStorage, Storage};
 use std::path::Path;
 use std::str::FromStr;
@@ -17,6 +16,14 @@ pub enum Site {
     North,
 }
 
+/// A site error.
+#[derive(Debug, Fail)]
+pub enum Error {
+    /// Invalid site name.
+    #[fail(display = "invalid site name: {}", _0)]
+    SiteName(String),
+}
+
 impl Site {
     /// Returns a vector of this site's heartbeats inside the provided sbd root directory.
     ///
@@ -26,12 +33,26 @@ impl Site {
     /// use atlas::Site;
     /// let heartbeats = Site::North.heartbeats("/var/iridium").unwrap();
     /// ```
-    pub fn heartbeats<P: AsRef<Path>>(&self, path: P) -> Result<Vec<Heartbeat>, Error> {
+    pub fn heartbeats<P: AsRef<Path>>(&self, path: P) -> Result<Vec<Heartbeat>, ::failure::Error> {
         let storage = FilesystemStorage::open(path)?;
         Ok(reassemble(storage.messages_from_imei(self.imei())?)?
             .into_iter()
             .filter_map(|message| Heartbeat::new(&message).ok())
             .collect())
+    }
+
+    /// Returns the latest heartbeat.
+    ///
+    /// If there are any errors or there are no heartbeats, returns None.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use atlas::Site;
+    /// let heartbeat = Site::North.latest_heartbeat("/var/iridium").unwrap();
+    /// ```
+    pub fn latest_heartbeat<P: AsRef<Path>>(&self, path: P) -> Option<Heartbeat> {
+        self.heartbeats(path).ok().and_then(|mut h| h.pop())
     }
 
     /// Returns this site's active IMEI.
@@ -52,17 +73,19 @@ impl Site {
 }
 
 impl FromStr for Site {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Site, String> {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Site, Error> {
         match s.to_lowercase().as_str() {
             "south" => Ok(Site::South),
             "north" => Ok(Site::North),
-            _ => Err(format!("invalid site name: {}", s)),
+            _ => Err(Error::SiteName(s.to_string())),
         }
     }
 }
 
-fn reassemble(mut sbd_messages: Vec<::sbd::mo::Message>) -> Result<Vec<::sutron::Message>, Error> {
+fn reassemble(
+    mut sbd_messages: Vec<::sbd::mo::Message>,
+) -> Result<Vec<::sutron::Message>, ::failure::Error> {
     use sutron::message::Reassembler;
     use sutron::Packet;
 

@@ -17,7 +17,7 @@ use std::io::{Cursor, Read};
 const MAGIC_NUMBER: [u8; 4] = *b"ATHB";
 
 /// An ATLAS heartbeat.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Heartbeat {
     /// Version 03 of heartbeat messages began in July 2018 and ended in September 2018.
     Version03 {
@@ -105,11 +105,11 @@ pub mod version_03 {
     ///
     /// If the can232 adapter, which is used to communicate with the four batteries, couldn't be opened,
     /// then this will be None. If an individual K2 didn't respond, its entry will be none.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Batteries(pub Option<[Option<K2>; 4]>);
 
     /// K2 battery information.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct K2 {
         /// The battery voltage [V].
         pub voltage: f32,
@@ -142,11 +142,11 @@ pub mod version_03 {
     }
 
     /// Two EFOYs were installed at each site.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Efoys(pub [Option<Efoy>; 2]);
 
     /// EFOY status information.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Efoy {
         /// The internal temperature of the EFOY [C].
         pub internal_temperature: f32,
@@ -174,7 +174,7 @@ pub mod version_03 {
     }
 
     /// Information from the weather sensors.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Sensors {
         /// The barometric pressure inside of the power box [mbar].
         pub barometric_pressure: f32,
@@ -191,7 +191,7 @@ pub mod version_03 {
     }
 
     /// Wind sensor data.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Wind {
         /// The wind speed [m/s, maybe?].
         pub speed: f32,
@@ -201,7 +201,7 @@ pub mod version_03 {
     }
 
     /// Scanner log data.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Scanner {
         /// The string of information logged when the scanner powered on.
         pub power_on: String,
@@ -369,11 +369,11 @@ pub mod version_04 {
     use std::io::Cursor;
 
     /// Information about the efoys.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Efoys([Option<Efoy>; 2]);
 
     /// Information about one efoy.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Efoy {
         /// The same information that was transmitted in version 03.
         pub efoy: super::version_03::Efoy,

@@ -15,7 +15,7 @@ use sutron::Message;
 /// An ATLAS heartbeat.
 ///
 /// Any version of raw heartbeat can be turneed into this structure.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Heartbeat {
     /// The date and time of the reception of the first heartbeat packet.
     ///
@@ -33,14 +33,14 @@ pub struct Heartbeat {
 }
 
 /// Battery information.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Battery {
     /// The battery state of charge, as a percentage.
     pub state_of_charge: f32,
 }
 
 /// Wind information.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Wind {
     /// The wind speed, in meters per second.
     pub speed: f32,

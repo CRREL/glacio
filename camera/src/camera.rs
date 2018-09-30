@@ -98,6 +98,21 @@ impl Camera {
         Ok(images)
     }
 
+    /// Returns this camera's latest image.
+    ///
+    /// If there is an error reading the image, or there are no images, returns None.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use camera::Camera;
+    /// let camera = Camera::from_path("fixtures/camera/images/one");
+    /// let image = camera.latest_image().unwrap();
+    /// ```
+    pub fn latest_image(&self) -> Option<Image> {
+        self.images().ok().and_then(|mut images| images.pop())
+    }
+
     /// Returns this camera's interval, as determined by its images.
     ///
     /// # Examples
