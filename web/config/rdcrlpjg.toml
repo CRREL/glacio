@@ -1,3 +1,32 @@
 [[cameras]]
 id = "ATLAS_CAM"
-name = "ATLAS context"
+name = "ATLAS South, context"
+
+[[cameras]]
+id = "ATLAS_CAM2"
+name = "ATLAS South, close-up"
+
+[[cameras]]
+id = "HEL_BERGCAM3"
+dual = true
+name = "ATLAS North, context"
+
+[[cameras]]
+id = "HEL_ATLASNORTH"
+name = "ATLAS North, close-up"
+
+[[cameras]]
+id = "HEL_DUAL"
+dual = true
+name = "Helheim Glacier dual camera"
+
+[[cameras]]
+id = "HEL_BERGCAM1"
+dual = true
+name = "Sermerlik Fjord dual camera, south"
+
+
+[[cameras]]
+id = "HEL_BERGCAM2"
+dual = true
+name = "Sermerlik Fjord dual camera, north"
