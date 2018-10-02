@@ -112,7 +112,7 @@ pub mod version_03 {
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
     pub struct Batteries(pub Option<[Option<K2>; 4]>);
 
-    /// K2 battery information.
+    /// K2 batteries produce data via CANBUS, piped through the CAN232 adapter.
     #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     pub struct K2 {
         /// The battery voltage [V].
@@ -149,7 +149,7 @@ pub mod version_03 {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Efoys(pub [Option<Efoy>; 2]);
 
-    /// EFOY status information.
+    /// Each EFOY communicates via its own COM port using MODBUS.
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Efoy {
         /// The internal temperature of the EFOY [C].
@@ -275,7 +275,17 @@ pub mod version_03 {
     }
 
     impl K2 {
-        fn read_from<R: Read>(mut read: R) -> Result<K2, ::failure::Error> {
+        /// Reads K2 data from a `Read`.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use atlas::heartbeat::raw::version_03::K2;
+        /// use std::io::Cursor;
+        /// let k2 = K2::read_from(Cursor::new([0; 18])).unwrap();
+        /// assert_eq!(K2::default(), k2);
+        /// ```
+        pub fn read_from<R: Read>(mut read: R) -> Result<K2, ::failure::Error> {
             Ok(K2 {
                 voltage: read.read_f32::<LittleEndian>()?,
                 current: read.read_f32::<LittleEndian>()?,
