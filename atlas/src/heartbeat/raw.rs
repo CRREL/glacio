@@ -513,6 +513,8 @@ mod tests {
     fn fixtures() {
         Heartbeat::new(include_bytes!("../../fixtures/03/atlas-north.hb")).unwrap();
         Heartbeat::new(include_bytes!("../../fixtures/03/atlas-south.hb")).unwrap();
+        Heartbeat::new(include_bytes!("../../fixtures/04/atlas-north.hb")).unwrap();
+        Heartbeat::new(include_bytes!("../../fixtures/04/atlas-south.hb")).unwrap();
     }
 
     #[test]
