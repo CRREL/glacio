@@ -1,11 +1,18 @@
-//! ATLAS heartbeats, which contain status information.
+//! A heartbeat contains status information about a single ATLAS system.
 //!
-//! Reading heartbeats is a two-step process. First, raw bytes are parsed into a `raw::Heartbeat`,
-//! which maps onto the raw heartbeat data:
+//! Each system sends one heartbeat an hour, usually a few minutes after the top of the hour.
+//! There is only one heartbeat message, but due to size limitations on Iridium SBD messages one
+//! heartbeat might be broken up over multiple SBD messages. These messages contain a Sutron header
+//! that enables their reassembly into a single message. SBD message parsing is handled by the
+//! `sbd` crate, and message reassembly by the `sutron` crate.
+//!
+//! One we have the raw heartbeats, reading them is a two-step process. First, raw bytes are parsed
+//! into a `raw::Heartbeat`:
 //!
 //! ```
 //! use atlas::heartbeat::raw;
-//! let raw_heartbeat = raw::Heartbeat::new(include_bytes!("../../fixtures/03/atlas-north.hb")).unwrap();
+//! let bytes = include_bytes!("../../fixtures/03/atlas-north.hb");
+//! let raw_heartbeat = raw::Heartbeat::new(bytes).unwrap();
 //! ```
 //!
 //! A `raw::Heartbeat` is then turned into a `Heartbeat`, which regularizes some of the data and
@@ -19,7 +26,7 @@
 //! ```
 //!
 //! Note that a heartbeat creates from raw bytes will not have an associated datetime; only
-//! heartbeats creates from `sbd::mo::Messages` have those.
+//! heartbeats created from `sbd::mo::Messages` will have datetimes.
 
 pub mod raw;
 
