@@ -9,7 +9,7 @@
 //!
 //! ```
 //! use atlas::heartbeat::raw::Heartbeat;
-//! let heartbeat = Heartbeat::new(include_bytes!("../../fixtures/03/atlas-north.hb")).unwrap();
+//! let heartbeat = Heartbeat::new(include_bytes!("../../../fixtures/03/atlas-north.hb")).unwrap();
 //! ```
 
 use std::io::{Cursor, Read};
@@ -486,7 +486,7 @@ impl Heartbeat {
     ///
     /// ```
     /// use atlas::heartbeat::raw::Heartbeat;
-    /// let heartbeat = Heartbeat::new(include_bytes!("../../fixtures/03/atlas-north.hb")).unwrap();
+    /// let heartbeat = Heartbeat::new(include_bytes!("../../../fixtures/03/atlas-north.hb")).unwrap();
     /// ```
     pub fn new(bytes: &[u8]) -> Result<Heartbeat, ::failure::Error> {
         let mut cursor = Cursor::new(bytes);
@@ -585,10 +585,10 @@ mod tests {
 
     #[test]
     fn fixtures() {
-        Heartbeat::new(include_bytes!("../../fixtures/03/atlas-north.hb")).unwrap();
-        Heartbeat::new(include_bytes!("../../fixtures/03/atlas-south.hb")).unwrap();
-        Heartbeat::new(include_bytes!("../../fixtures/04/atlas-north.hb")).unwrap();
-        Heartbeat::new(include_bytes!("../../fixtures/04/atlas-south.hb")).unwrap();
+        Heartbeat::new(include_bytes!("../../../fixtures/03/atlas-north.hb")).unwrap();
+        Heartbeat::new(include_bytes!("../../../fixtures/03/atlas-south.hb")).unwrap();
+        Heartbeat::new(include_bytes!("../../../fixtures/04/atlas-north.hb")).unwrap();
+        Heartbeat::new(include_bytes!("../../../fixtures/04/atlas-south.hb")).unwrap();
     }
 
     #[test]
