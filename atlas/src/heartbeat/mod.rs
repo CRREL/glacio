@@ -25,7 +25,8 @@ pub mod raw;
 
 use chrono::{DateTime, Utc};
 use failure::Error;
-use sutron::Message;
+use std::path::Path;
+use sutron::{Message, Packet};
 
 /// An ATLAS heartbeat.
 ///
@@ -76,6 +77,29 @@ pub struct Wind {
 }
 
 impl Heartbeat {
+    /// Creates a heartbeat from one or more paths to SBD messages.
+    ///
+    /// If there is more than one SBD message, paths must be in the correct order to re-assemble
+    /// the complete message.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use atlas::Heartbeat;
+    /// let heartbeat = Heartbeat::from_paths(&vec![
+    ///     "fixtures/sbd/181002_050602.sbd",
+    ///     "fixtures/sbd/181002_050622.sbd",
+    /// ]);
+    /// ```
+    pub fn from_paths<P: AsRef<Path>>(paths: &[P]) -> Result<Heartbeat, Error> {
+        paths
+            .iter()
+            .map(|p| Packet::from_path(p.as_ref()))
+            .collect::<Result<Vec<_>, _>>()
+            .and_then(|packets| Message::new(packets).map_err(Error::from))
+            .and_then(|message| Heartbeat::new(&message))
+    }
+
     /// Creates a heartbeat from a Sutron message.
     ///
     /// Note that a vector of u8s can be turned into a Sutron message.

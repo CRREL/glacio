@@ -6,21 +6,15 @@
 //!
 //! # Examples
 //!
-//! Heartbeat messages come in as one or more Iridium SBD messages. These messages are sent by
-//! Sutron data loggers, which append their own header information to the messages. The best way to
-//! create heartbeats from raw SBD messages is to use the `sutron` crate:
+//! Heartbeat messages come in as one or more Iridium SBD messages. A heartbeat can be created
+//! directly from SBD messages on the filesystem:
 //!
 //! ```
-//! # extern crate sutron;
-//! # extern crate atlas;
-//! # fn main() {
-//! use sutron::{Packet, Message};
 //! use atlas::Heartbeat;
-//! let packet_0 = Packet::from_path("fixtures/sbd/181002_050602.sbd").unwrap();
-//! let packet_1 = Packet::from_path("fixtures/sbd/181002_050622.sbd").unwrap();
-//! let message = Message::new(vec![packet_0, packet_1]).unwrap();
-//! let heartbeat = Heartbeat::new(&message).unwrap();
-//! # }
+//! let heartbeat = Heartbeat::from_paths(&vec![
+//!     "fixtures/sbd/181002_050602.sbd",
+//!     "fixtures/sbd/181002_050622.sbd",
+//! ]);
 //! ```
 
 #![deny(missing_docs, missing_debug_implementations, unsafe_code)]
