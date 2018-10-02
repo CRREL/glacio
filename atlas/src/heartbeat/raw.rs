@@ -93,7 +93,7 @@ pub enum Error {
 pub mod version_03 {
     use byteorder::{LittleEndian, ReadBytesExt};
     use heartbeat;
-    use std::io::{Cursor, Read};
+    use std::io::{Cursor, Read, Seek, SeekFrom};
 
     /// A connection to the device could not be opened.
     pub const COULD_NOT_OPEN: u8 = b'x';
@@ -104,15 +104,16 @@ pub mod version_03 {
     /// The device responded poorly.
     pub const BAD: u8 = b'b';
 
-    /// Four K2 batteries were installed at each site.
+    /// Four K2 batteries are installed at each site.
     ///
-    /// If the can232 adapter, which is used to communicate with the four batteries, couldn't be opened,
-    /// then this will be None. If an individual K2 didn't respond, its entry will be none.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    /// All four batteries communicate through a CAN232 adapter. If a connection to the adapter
+    /// cannot be opened, then the batteries will contain `None`. Each individual battery might
+    /// also fail to respond, in which case its entry in the array will be `None`.
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
     pub struct Batteries(pub Option<[Option<K2>; 4]>);
 
     /// K2 battery information.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     pub struct K2 {
         /// The battery voltage [V].
         pub voltage: f32,
@@ -220,17 +221,36 @@ pub mod version_03 {
     }
 
     impl Batteries {
-        /// Reads battery information from a cursor.
-        pub fn read_from(cursor: &mut Cursor<&[u8]>) -> Result<Batteries, ::failure::Error> {
-            let position = cursor.position();
-            if cursor.read_u8()? == COULD_NOT_OPEN {
+        /// Reads battery information from some bytes.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use std::io::Cursor;
+        /// use atlas::heartbeat::raw::version_03::{Batteries, K2};
+        /// let cursor = Cursor::new(b"x");
+        /// assert_eq!(Batteries(None), Batteries::read_from(cursor).unwrap());
+        /// let cursor = Cursor::new(b"bbbb");
+        /// assert_eq!(Batteries(Some([None, None, None, None])), Batteries::read_from(cursor).unwrap());
+        ///
+        /// let mut bytes = vec![b'g'];
+        /// bytes.extend([0; 18].iter());
+        /// bytes.extend([b'b'; 3].iter());
+        /// let cursor = Cursor::new(bytes);
+        /// assert_eq!(
+        ///     Batteries(Some([Some(K2::default()), None, None, None])),
+        ///     Batteries::read_from(cursor).unwrap()
+        /// );
+        /// ```
+        pub fn read_from<R: Read + Seek>(mut read: R) -> Result<Batteries, ::failure::Error> {
+            if read.read_u8()? == COULD_NOT_OPEN {
                 Ok(Batteries(None))
             } else {
-                cursor.set_position(position);
+                read.seek(SeekFrom::Current(-1))?;
                 let mut batteries = [None, None, None, None];
                 for mut battery in &mut batteries {
-                    match cursor.read_u8()? {
-                        GOOD => *battery = Some(K2::read_from(cursor)?),
+                    match read.read_u8()? {
+                        GOOD => *battery = Some(K2::read_from(&mut read)?),
                         BAD => *battery = None,
                         n @ _ => return Err(super::Error::UnexpectedByte(n).into()),
                     }
@@ -255,17 +275,17 @@ pub mod version_03 {
     }
 
     impl K2 {
-        fn read_from(cursor: &mut Cursor<&[u8]>) -> Result<K2, ::failure::Error> {
+        fn read_from<R: Read>(mut read: R) -> Result<K2, ::failure::Error> {
             Ok(K2 {
-                voltage: cursor.read_f32::<LittleEndian>()?,
-                current: cursor.read_f32::<LittleEndian>()?,
-                temperature: cursor.read_i8()?,
-                state_of_charge: cursor.read_u8()?,
-                status: cursor.read_u8()?,
-                shutdown_codes: cursor.read_u16::<LittleEndian>()?,
-                error_codes: cursor.read_u16::<LittleEndian>()?,
-                warning_codes: cursor.read_u16::<LittleEndian>()?,
-                additional_information: cursor.read_u8()?,
+                voltage: read.read_f32::<LittleEndian>()?,
+                current: read.read_f32::<LittleEndian>()?,
+                temperature: read.read_i8()?,
+                state_of_charge: read.read_u8()?,
+                status: read.read_u8()?,
+                shutdown_codes: read.read_u16::<LittleEndian>()?,
+                error_codes: read.read_u16::<LittleEndian>()?,
+                warning_codes: read.read_u16::<LittleEndian>()?,
+                additional_information: read.read_u8()?,
             })
         }
     }
