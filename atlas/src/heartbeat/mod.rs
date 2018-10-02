@@ -14,7 +14,7 @@ use sutron::Message;
 
 /// An ATLAS heartbeat.
 ///
-/// Any version of raw heartbeat can be turneed into this structure.
+/// Any version of raw heartbeat can be turned into this structure.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Heartbeat {
     /// The date and time of the reception of the first heartbeat packet.
