@@ -102,14 +102,13 @@ impl Heartbeat {
 
     /// Creates a heartbeat from a Sutron message.
     ///
-    /// Note that a vector of u8s can be turned into a Sutron message.
-    ///
     /// # Examples
     ///
     /// ```
     /// use atlas::Heartbeat;
     /// let bytes = include_bytes!("../../fixtures/03/atlas-north.hb");
-    /// let heartbeat = Heartbeat::new(&bytes.to_vec().into());
+    /// let message = bytes.to_vec().into(); // `sutron::Message` implements From<Vec<u8>>
+    /// let heartbeat = Heartbeat::new(&message);
     /// ```
     pub fn new(message: &Message) -> Result<Heartbeat, Error> {
         let raw = raw::Heartbeat::new(&message.data)?;
