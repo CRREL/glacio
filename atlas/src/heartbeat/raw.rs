@@ -146,11 +146,11 @@ pub mod version_03 {
     }
 
     /// Two EFOYs were installed at each site.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
     pub struct Efoys(pub [Option<Efoy>; 2]);
 
     /// Each EFOY communicates via its own COM port using MODBUS.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     pub struct Efoy {
         /// The internal temperature of the EFOY [C].
         pub internal_temperature: f32,
@@ -312,15 +312,31 @@ pub mod version_03 {
     }
 
     impl Efoys {
-        /// Reads the efoys from a cursor.
-        pub fn read_from(cursor: &mut Cursor<&[u8]>) -> Result<Efoys, ::failure::Error> {
+        /// Reads EFOY data from a read.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use atlas::heartbeat::raw::version_03::{Efoys, Efoy};
+        /// use std::io::Cursor;
+        ///
+        /// let cursor = Cursor::new(b"bb");
+        /// assert_eq!(Efoys([None, None]), Efoys::read_from(cursor).unwrap());
+        ///
+        /// let mut bytes = vec![b'g'];
+        /// bytes.extend([0; 23].iter());
+        /// bytes.push(b'b');
+        /// let cursor = Cursor::new(bytes);
+        /// assert_eq!(Efoys([Some(Efoy::default()), None]), Efoys::read_from(cursor).unwrap());
+        /// ```
+        pub fn read_from<R: Read>(mut read: R) -> Result<Efoys, ::failure::Error> {
             let mut efoys = [None, None];
             for efoy in &mut efoys {
-                let byte = cursor.read_u8()?;
+                let byte = read.read_u8()?;
                 *efoy = if byte == COULD_NOT_OPEN || byte == BAD {
                     None
                 } else {
-                    Some(Efoy::read_from(cursor)?)
+                    Some(Efoy::read_from(&mut read)?)
                 };
             }
             Ok(Efoys(efoys))
@@ -328,17 +344,26 @@ pub mod version_03 {
     }
 
     impl Efoy {
-        /// Reads an efoy from a cursor.
-        pub fn read_from(cursor: &mut Cursor<&[u8]>) -> Result<Efoy, ::failure::Error> {
+        /// Reads an EFOY from a read.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use std::io::Cursor;
+        /// use atlas::heartbeat::raw::version_03::Efoy;
+        /// let cursor = Cursor::new([0; 23]);
+        /// assert_eq!(Efoy::default(), Efoy::read_from(cursor).unwrap());
+        /// ```
+        pub fn read_from<R: Read>(mut read: R) -> Result<Efoy, ::failure::Error> {
             Ok(Efoy {
-                internal_temperature: cursor.read_f32::<LittleEndian>()?,
-                battery_voltage: cursor.read_f32::<LittleEndian>()?,
-                output_current: cursor.read_f32::<LittleEndian>()?,
-                reservoir_fluid_level: cursor.read_f32::<LittleEndian>()?,
-                current_error: cursor.read_u8()?,
-                methanol_consumption: cursor.read_f32::<LittleEndian>()?,
-                mode: cursor.read_u8()?,
-                status: cursor.read_u8()?,
+                internal_temperature: read.read_f32::<LittleEndian>()?,
+                battery_voltage: read.read_f32::<LittleEndian>()?,
+                output_current: read.read_f32::<LittleEndian>()?,
+                reservoir_fluid_level: read.read_f32::<LittleEndian>()?,
+                current_error: read.read_u8()?,
+                methanol_consumption: read.read_f32::<LittleEndian>()?,
+                mode: read.read_u8()?,
+                status: read.read_u8()?,
             })
         }
     }
@@ -402,14 +427,14 @@ pub mod version_03 {
 pub mod version_04 {
     use super::version_03::{BAD, COULD_NOT_OPEN};
     use byteorder::ReadBytesExt;
-    use std::io::Cursor;
+    use std::io::Read;
 
     /// Information about the efoys.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    pub struct Efoys([Option<Efoy>; 2]);
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    pub struct Efoys(pub [Option<Efoy>; 2]);
 
     /// Information about one efoy.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     pub struct Efoy {
         /// The same information that was transmitted in version 03.
         pub efoy: super::version_03::Efoy,
@@ -419,17 +444,33 @@ pub mod version_04 {
     }
 
     impl Efoys {
-        /// Reads efoys from a cursor.
-        pub fn read_from(cursor: &mut Cursor<&[u8]>) -> Result<Efoys, ::failure::Error> {
+        /// Reads EFOY data from a read.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use atlas::heartbeat::raw::version_04::{Efoys, Efoy};
+        /// use std::io::Cursor;
+        ///
+        /// let cursor = Cursor::new(b"bb");
+        /// assert_eq!(Efoys([None, None]), Efoys::read_from(cursor).unwrap());
+        ///
+        /// let mut bytes = vec![b'g'];
+        /// bytes.extend([0; 24].iter());
+        /// bytes.push(b'b');
+        /// let cursor = Cursor::new(bytes);
+        /// assert_eq!(Efoys([Some(Efoy::default()), None]), Efoys::read_from(cursor).unwrap());
+        /// ```
+        pub fn read_from<R: Read>(mut read: R) -> Result<Efoys, ::failure::Error> {
             let mut efoys = [None, None];
             for efoy in &mut efoys {
-                let byte = cursor.read_u8()?;
+                let byte = read.read_u8()?;
                 *efoy = if byte == COULD_NOT_OPEN || byte == BAD {
                     None
                 } else {
                     Some(Efoy {
-                        efoy: super::version_03::Efoy::read_from(cursor)?,
-                        active_cartridge_port: cursor.read_u8()?,
+                        efoy: super::version_03::Efoy::read_from(&mut read)?,
+                        active_cartridge_port: read.read_u8()?,
                     })
                 };
             }
