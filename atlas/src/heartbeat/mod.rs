@@ -35,8 +35,11 @@ pub struct Heartbeat {
 /// Battery information.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Battery {
-    /// The battery state of charge, as a percentage.
+    /// The battery state of charge [%].
     pub state_of_charge: f32,
+
+    /// The battery voltage [V].
+    pub voltage: f32,
 }
 
 /// Wind information.

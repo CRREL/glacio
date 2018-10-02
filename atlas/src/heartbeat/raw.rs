@@ -271,6 +271,7 @@ pub mod version_03 {
         fn from(battery: K2) -> heartbeat::Battery {
             heartbeat::Battery {
                 state_of_charge: battery.state_of_charge.into(),
+                voltage: battery.voltage,
             }
         }
     }
