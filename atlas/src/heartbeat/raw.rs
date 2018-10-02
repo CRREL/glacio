@@ -1,7 +1,7 @@
-//! Raw heartbeat information.
+//! Raw heartbeats map more-or-less directly onto the bytes in the heartbeat messages.
 //!
-//! These structures map more-or-less directly onto the bytes that are received from the remote
-//! systems.
+//! Generally downstreams shouldn't use raw heartbeats, except to pluck any information that isn't
+//! included in the higher level `atlas::Heartbeat`.
 //!
 //! # Examples
 //!
@@ -16,49 +16,52 @@ use std::io::{Cursor, Read};
 
 const MAGIC_NUMBER: [u8; 4] = *b"ATHB";
 
-/// An ATLAS heartbeat.
+/// An enum that contains all raw versions of ATLAS heartbeats supported by this crate.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Heartbeat {
     /// Version 03 of heartbeat messages began in July 2018 and ended in September 2018.
     Version03 {
-        /// Information about the batteries at the site.
+        /// Each site has four K2 batteries.
         batteries: version_03::Batteries,
 
-        /// Information about the EFOYs at the site.
+        /// Each site has two EFOYs.
+        ///
+        /// EFOYs are methanol fuel cells that should take over once the solar isn't enough to keep
+        /// the system powered.
         efoys: version_03::Efoys,
 
-        /// Information from the weather sensors.
+        /// Both sites have an identical suite of weather sensors.
         sensors: version_03::Sensors,
 
-        /// Information from the wind sensor.
-        ///
-        /// The north site has one, the south site doesn't.
+        /// The north site has a wind sensor, but the south site doesn't.
         wind: Option<version_03::Wind>,
 
-        /// Information about the scanner logs.
+        /// The scanner saves ASCII messages to the data logger, which are trasmitted back in
+        /// heartbeats as-is.
         scanner: version_03::Scanner,
     },
 
     /// Version 04 of heartbeat messages began in September 2018.
     ///
-    /// It's identical to version 03, except that the efoys have one extra byte (the active
-    /// sensor).
+    /// It's identical to version 03 except that the efoy data includes one extra byte to indicate
+    /// the currently active cartridge.
     Version04 {
-        /// Information about the batteries at the site.
+        /// Each site has four K2 batteries.
         batteries: version_03::Batteries,
 
-        /// Information about the EFOYs at the site.
+        /// Each site has two EFOYs.
+        ///
+        /// The EFOY data for version 04 has one extra byte, the active cartridge, from version 03.
         efoys: version_04::Efoys,
 
-        /// Information from the weather sensors.
+        /// Both sites has an identical suite of weather sensor.
         sensors: version_03::Sensors,
 
-        /// Information from the wind sensor.
-        ///
-        /// The north site has one, the south site doesn't.
+        /// The north site has a wind sensor, but the south site doesn't.
         wind: Option<version_03::Wind>,
 
-        /// Information about the scanner logs.
+        /// The scanner saves ASCII messages to the data logger, which are trasmitted back in
+        /// heartbeats as-is.
         scanner: version_03::Scanner,
     },
 }
