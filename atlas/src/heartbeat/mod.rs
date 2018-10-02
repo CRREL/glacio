@@ -1,10 +1,25 @@
 //! ATLAS heartbeats, which contain status information.
 //!
-//! Reading heartbeats is a two-step process:
+//! Reading heartbeats is a two-step process. First, raw bytes are parsed into a `raw::Heartbeat`,
+//! which maps onto the raw heartbeat data:
 //!
-//! - Raw bytes are parsed into a `raw::Heartbeat`, which maps onto the raw heartbeat data.
-//! - A `raw::Heartbeat` is then turned into a `Heartbeat`, which regularizes some of the data and
+//! ```
+//! use atlas::heartbeat::raw;
+//! let raw_heartbeat = raw::Heartbeat::new(include_bytes!("../../fixtures/03/atlas-north.hb")).unwrap();
+//! ```
+//!
+//! A `raw::Heartbeat` is then turned into a `Heartbeat`, which regularizes some of the data and
 //! maps status codes onto enums.
+//!
+//! ```
+//! # use atlas::heartbeat::raw;
+//! # let raw_heartbeat = raw::Heartbeat::new(include_bytes!("../../fixtures/03/atlas-north.hb")).unwrap();
+//! use atlas::Heartbeat;
+//! let heartbeat = Heartbeat::from(raw_heartbeat);
+//! ```
+//!
+//! Note that a heartbeat creates from raw bytes will not have an associated datetime; only
+//! heartbeats creates from `sbd::mo::Messages` have those.
 
 pub mod raw;
 
