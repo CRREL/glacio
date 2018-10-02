@@ -270,6 +270,8 @@ pub mod version_03 {
     impl From<K2> for heartbeat::Battery {
         fn from(battery: K2) -> heartbeat::Battery {
             heartbeat::Battery {
+                current: battery.current,
+                temperature: battery.temperature.into(),
                 state_of_charge: battery.state_of_charge.into(),
                 voltage: battery.voltage,
             }

@@ -35,8 +35,16 @@ pub struct Heartbeat {
 /// Battery information.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Battery {
+    /// The current in or out of the battery [A].
+    ///
+    /// Current out is positive, current in is negative.
+    pub current: f32,
+
     /// The battery state of charge [%].
     pub state_of_charge: f32,
+
+    /// The battery temperature [C].
+    pub temperature: f32,
 
     /// The battery voltage [V].
     pub voltage: f32,
