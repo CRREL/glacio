@@ -1,6 +1,6 @@
 //! Version 04 of the heartbeats was installed in September 2018.
 
-use super::version_03::{BAD, COULD_NOT_OPEN};
+use super::v03::{BAD, COULD_NOT_OPEN};
 use byteorder::ReadBytesExt;
 use std::io::Read;
 
@@ -12,7 +12,7 @@ pub struct Efoys(pub [Option<Efoy>; 2]);
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
 pub struct Efoy {
     /// The same information that was transmitted in version 03.
-    pub efoy: super::version_03::Efoy,
+    pub efoy: super::v03::Efoy,
 
     /// The active cartridge port.
     pub active_cartridge_port: u8,
@@ -24,7 +24,7 @@ impl Efoys {
     /// # Examples
     ///
     /// ```
-    /// use atlas::heartbeat::raw::version_04::{Efoys, Efoy};
+    /// use atlas::heartbeat::raw::v04::{Efoys, Efoy};
     /// use std::io::Cursor;
     ///
     /// let cursor = Cursor::new(b"bb");
@@ -44,7 +44,7 @@ impl Efoys {
                 None
             } else {
                 Some(Efoy {
-                    efoy: super::version_03::Efoy::read_from(&mut read)?,
+                    efoy: super::v03::Efoy::read_from(&mut read)?,
                     active_cartridge_port: read.read_u8()?,
                 })
             };

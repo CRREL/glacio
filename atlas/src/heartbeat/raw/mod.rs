@@ -13,8 +13,8 @@
 //! let heartbeat = Heartbeat::new(bytes).unwrap();
 //! ```
 
-pub mod version_03;
-pub mod version_04;
+pub mod v03;
+pub mod v04;
 
 use std::io::{Cursor, Read};
 
@@ -24,49 +24,49 @@ const MAGIC_NUMBER: [u8; 4] = *b"ATHB";
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Heartbeat {
     /// Version 03 of heartbeat messages began in July 2018 and ended in September 2018.
-    Version03 {
+    V03 {
         /// Each site has four K2 batteries.
-        batteries: version_03::Batteries,
+        batteries: v03::Batteries,
 
         /// Each site has two EFOYs.
         ///
         /// EFOYs are methanol fuel cells that should take over once the solar isn't enough to keep
         /// the system powered.
-        efoys: version_03::Efoys,
+        efoys: v03::Efoys,
 
         /// Both sites have an identical suite of weather sensors.
-        sensors: version_03::Sensors,
+        sensors: v03::Sensors,
 
         /// The north site has a wind sensor, but the south site doesn't.
-        wind: Option<version_03::Wind>,
+        wind: Option<v03::Wind>,
 
         /// The scanner saves ASCII messages to the data logger, which are trasmitted back in
         /// heartbeats as-is.
-        scanner: version_03::Scanner,
+        scanner: v03::Scanner,
     },
 
     /// Version 04 of heartbeat messages began in September 2018.
     ///
     /// It's identical to version 03 except that the efoy data includes one extra byte to indicate
     /// the currently active cartridge.
-    Version04 {
+    V04 {
         /// Each site has four K2 batteries.
-        batteries: version_03::Batteries,
+        batteries: v03::Batteries,
 
         /// Each site has two EFOYs.
         ///
         /// The EFOY data for version 04 has one extra byte, the active cartridge, from version 03.
-        efoys: version_04::Efoys,
+        efoys: v04::Efoys,
 
         /// Both sites has an identical suite of weather sensor.
-        sensors: version_03::Sensors,
+        sensors: v03::Sensors,
 
         /// The north site has a wind sensor, but the south site doesn't.
-        wind: Option<version_03::Wind>,
+        wind: Option<v03::Wind>,
 
         /// The scanner saves ASCII messages to the data logger, which are trasmitted back in
         /// heartbeats as-is.
-        scanner: version_03::Scanner,
+        scanner: v03::Scanner,
     },
 }
 
@@ -115,14 +115,14 @@ impl Heartbeat {
         let mut length = [0u8; 3];
         cursor.read_exact(&mut length)?;
         match version {
-            3 => Heartbeat::read_version_03_from(cursor),
-            4 => Heartbeat::read_version_04_from(cursor),
+            3 => Heartbeat::read_v03_from(cursor),
+            4 => Heartbeat::read_v04_from(cursor),
             _ => return Err(Error::Version(version).into()),
         }
     }
 
-    fn read_version_03_from(mut cursor: Cursor<&[u8]>) -> Result<Heartbeat, ::failure::Error> {
-        use self::version_03::*;
+    fn read_v03_from(mut cursor: Cursor<&[u8]>) -> Result<Heartbeat, ::failure::Error> {
+        use self::v03::*;
         let batteries = Batteries::read_from(&mut cursor)?;
         let efoys = Efoys::read_from(&mut cursor)?;
         let sensors = Sensors::read_from(&mut cursor)?;
@@ -135,7 +135,7 @@ impl Heartbeat {
             wind = Some(Wind::read_from(&mut cursor)?);
             Scanner::read_from(&mut cursor)?
         };
-        Ok(Heartbeat::Version03 {
+        Ok(Heartbeat::V03 {
             batteries: batteries,
             efoys: efoys,
             sensors: sensors,
@@ -144,9 +144,9 @@ impl Heartbeat {
         })
     }
 
-    fn read_version_04_from(mut cursor: Cursor<&[u8]>) -> Result<Heartbeat, ::failure::Error> {
-        use self::version_03::{Batteries, Scanner, Sensors, Wind};
-        use self::version_04::Efoys;
+    fn read_v04_from(mut cursor: Cursor<&[u8]>) -> Result<Heartbeat, ::failure::Error> {
+        use self::v03::{Batteries, Scanner, Sensors, Wind};
+        use self::v04::Efoys;
 
         let batteries = Batteries::read_from(&mut cursor)?;
         let efoys = Efoys::read_from(&mut cursor)?;
@@ -160,7 +160,7 @@ impl Heartbeat {
             wind = Some(Wind::read_from(&mut cursor)?);
             Scanner::read_from(&mut cursor)?
         };
-        Ok(Heartbeat::Version04 {
+        Ok(Heartbeat::V04 {
             batteries: batteries,
             efoys: efoys,
             sensors: sensors,
@@ -173,7 +173,7 @@ impl Heartbeat {
 impl From<Heartbeat> for ::Heartbeat {
     fn from(heartbeat: Heartbeat) -> ::Heartbeat {
         match heartbeat.clone() {
-            Heartbeat::Version03 {
+            Heartbeat::V03 {
                 batteries, wind, ..
             } => ::Heartbeat {
                 datetime: None,
@@ -181,7 +181,7 @@ impl From<Heartbeat> for ::Heartbeat {
                 wind: wind.map(|w| w.into()),
                 raw: heartbeat,
             },
-            Heartbeat::Version04 {
+            Heartbeat::V04 {
                 batteries, wind, ..
             } => ::Heartbeat {
                 datetime: None,

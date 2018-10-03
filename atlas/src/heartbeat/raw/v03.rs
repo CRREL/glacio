@@ -136,7 +136,7 @@ impl Batteries {
     ///
     /// ```
     /// use std::io::Cursor;
-    /// use atlas::heartbeat::raw::version_03::{Batteries, K2};
+    /// use atlas::heartbeat::raw::v03::{Batteries, K2};
     /// let cursor = Cursor::new(b"x");
     /// assert_eq!(Batteries(None), Batteries::read_from(cursor).unwrap());
     /// let cursor = Cursor::new(b"bbbb");
@@ -189,7 +189,7 @@ impl K2 {
     /// # Examples
     ///
     /// ```
-    /// use atlas::heartbeat::raw::version_03::K2;
+    /// use atlas::heartbeat::raw::v03::K2;
     /// use std::io::Cursor;
     /// let k2 = K2::read_from(Cursor::new([0; 18])).unwrap();
     /// assert_eq!(K2::default(), k2);
@@ -226,7 +226,7 @@ impl Efoys {
     /// # Examples
     ///
     /// ```
-    /// use atlas::heartbeat::raw::version_03::{Efoys, Efoy};
+    /// use atlas::heartbeat::raw::v03::{Efoys, Efoy};
     /// use std::io::Cursor;
     ///
     /// let cursor = Cursor::new(b"bb");
@@ -259,7 +259,7 @@ impl Efoy {
     ///
     /// ```
     /// use std::io::Cursor;
-    /// use atlas::heartbeat::raw::version_03::Efoy;
+    /// use atlas::heartbeat::raw::v03::Efoy;
     /// let cursor = Cursor::new([0; 23]);
     /// assert_eq!(Efoy::default(), Efoy::read_from(cursor).unwrap());
     /// ```
