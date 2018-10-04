@@ -2,11 +2,11 @@ image_document_root = "/Users/rdcrlpjg/iridiumcam/StarDot"
 image_server = "http://localhost:8000"
 iridium_sbd_root = "/Users/rdcrlpjg/iridium"
 
-[[sites]]
+[[atlas]]
 id = "south"
 name = "ATLAS South"
 
-[[sites]]
+[[atlas]]
 id = "north"
 name = "ATLAS North"
 

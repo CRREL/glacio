@@ -35,6 +35,7 @@ pub struct Config {
     cameras: Vec<Camera>,
 
     iridium_sbd_root: PathBuf,
+    #[serde(rename = "atlas")]
     sites: Vec<Site>,
 }
 

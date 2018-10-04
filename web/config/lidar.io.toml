@@ -2,11 +2,11 @@ image_document_root = "/home/iridiumcam/StarDot"
 image_server = "http://iridiumcam.lidar.io"
 iridium_sbd_root = "/var/iridium"
 
-[[sites]]
+[[atlas]]
 id = "south"
 name = "ATLAS South"
 
-[[sites]]
+[[atlas]]
 id = "north"
 name = "ATLAS North"
 
