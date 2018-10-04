@@ -41,14 +41,13 @@ paths = ["/Users/rdcrlpjg/iridiumcam/StarDot/HEL_DUAL/StarDot1", "/Users/rdcrlpj
 description = "A dual-camera view of the Helheim Glacier."
 
 [[cameras]]
-id = "HEL_BERGCAM1"
-name = "Sermerlik Fjord south"
-paths = ["/Users/rdcrlpjg/iridiumcam/StarDot/HEL_BERGCAM1/StarDot1", "/Users/rdcrlpjg/iridiumcam/StarDot/HEL_BERGCAM1/StarDot2"]
-description = "A south-looking dual-camera view of icebergs in the Sermerlik Fjord."
-
-
-[[cameras]]
 id = "HEL_BERGCAM2"
 name = "Sermerlik Fjord north"
 paths = ["/Users/rdcrlpjg/iridiumcam/StarDot/HEL_BERGCAM2/StarDot1", "/Users/rdcrlpjg/iridiumcam/StarDot/HEL_BERGCAM2/StarDot2"]
 description = "A north-looking dual-camera view of icebergs in the Sermerlik Fjord."
+
+[[cameras]]
+id = "HEL_BERGCAM1"
+name = "Sermerlik Fjord south"
+paths = ["/Users/rdcrlpjg/iridiumcam/StarDot/HEL_BERGCAM1/StarDot1", "/Users/rdcrlpjg/iridiumcam/StarDot/HEL_BERGCAM1/StarDot2"]
+description = "A south-looking dual-camera view of icebergs in the Sermerlik Fjord."
