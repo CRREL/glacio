@@ -34,8 +34,8 @@ pub fn create_app(config: Config) -> App<Config> {
     App::with_state(config).configure(|app| {
         Cors::for_app(app)
             .send_wildcard()
-            .resource("/sites", |resource| resource.h(sites))
-            .resource("/sites/{id}", |resource| {
+            .resource("/atlas", |resource| resource.h(sites))
+            .resource("/atlas/{id}", |resource| {
                 resource.name("site");
                 resource.h(site)
             })
@@ -175,16 +175,16 @@ mod tests {
 
     #[test]
     fn sites() {
-        let sites: Vec<Site> = get("/sites");
+        let sites: Vec<Site> = get("/atlas");
         assert_eq!(2, sites.len());
     }
 
     #[test]
     fn site() {
-        let site: Site = get("/sites/north");
+        let site: Site = get("/atlas/north");
         assert_eq!("ATLAS North", site.name);
         assert_eq!("north", site.id);
-        assert!(site.url.ends_with("/sites/north"));
+        assert!(site.url.ends_with("/atlas/north"));
     }
 
     fn test_state() -> Config {
