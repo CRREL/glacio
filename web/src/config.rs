@@ -249,6 +249,23 @@ impl Camera {
         }
     }
 
+    /// Returns true if this is a dual camera.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use web::Config;
+    /// let config = Config::from_path("fixtures/config.toml").unwrap();
+    /// assert!(!config.camera("ATLAS_CAM").unwrap().is_dual());
+    /// assert!(config.camera("DUAL_CAM").unwrap().is_dual());
+    /// ```
+    pub fn is_dual(&self) -> bool {
+        match *self {
+            Camera::Single { .. } => false,
+            Camera::Dual { .. } => true,
+        }
+    }
+
     /// Returns the latest image for this camera.
     ///
     /// In the case of dual cameras, returns the most recent image from either camera. If there's a

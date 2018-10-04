@@ -81,6 +81,9 @@ pub struct Camera {
     /// The API url for this camera.
     pub url: String,
 
+    /// Is this camera a dual camera?
+    pub is_dual: bool,
+
     /// The latest image taken by this camera.
     pub latest_image: Option<Image>,
 }
@@ -105,6 +108,7 @@ impl Camera {
                 .url_for("camera", &[camera.id()])?
                 .as_str()
                 .to_string(),
+            is_dual: camera.is_dual(),
             latest_image: camera
                 .latest_image()
                 .map(|i| Image::new(&i, request))
