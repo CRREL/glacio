@@ -14,7 +14,8 @@ fn main() {
     let matches = App::from_yaml(yaml).get_matches();
 
     let addr = matches.value_of("ADDR").unwrap();
-    let config = Config::from_path(matches.value_of("CONFIG").unwrap()).unwrap();
+    let config = Config::from_path(matches.value_of("CONFIG").unwrap())
+        .expect("could not read configuration");
     let auto_reload = matches.is_present("auto-reload");
 
     if auto_reload {
