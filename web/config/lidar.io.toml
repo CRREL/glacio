@@ -19,7 +19,7 @@ description = "A wide-angle view of the ATLAS South system."
 [[cameras]]
 id = "ATLAS_CAM2"
 name = "ATLAS South scanner"
-path = ["/home/iridiumcam/StarDot/ATLAS_CAM2"]
+paths = ["/home/iridiumcam/StarDot/ATLAS_CAM2"]
 description = "A close-up view of the ATLAS South scanner."
 
 [[cameras]]
