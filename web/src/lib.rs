@@ -44,6 +44,13 @@ pub fn create_app(config: Config) -> App<Config> {
                 resource.name("camera");
                 resource.h(handler::camera)
             })
+            .resource("/cameras/{id}/images", |resource| {
+                resource.h(handler::camera_images_default)
+            })
+            .resource("/cameras/{id}/images/{subcamera_id}", |resource| {
+                resource.name("camera_images");
+                resource.h(handler::camera_images)
+            })
             .register()
     })
 }
@@ -54,7 +61,7 @@ mod tests {
     use actix_web::http::Method;
     use actix_web::test::TestServer;
     use actix_web::HttpMessage;
-    use handler::{Camera, Site};
+    use handler::{Camera, Image, Site};
     use serde::de::DeserializeOwned;
     use serde_json;
     use std::str;
@@ -71,6 +78,12 @@ mod tests {
         assert_eq!("ATLAS_CAM", camera.id);
         assert_eq!("ATLAS context", camera.name);
         assert!(camera.url.ends_with("/cameras/ATLAS_CAM"));
+    }
+
+    #[test]
+    fn camera_images() {
+        let images: Vec<Image> = get("/cameras/ATLAS_CAM/images");
+        assert_eq!(2, images.len());
     }
 
     #[test]

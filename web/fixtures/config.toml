@@ -13,7 +13,7 @@ name = "ATLAS North"
 [[cameras]]
 id = "ATLAS_CAM"
 name = "ATLAS context"
-path = "fixtures/ATLAS_CAM"
+paths = ["fixtures/ATLAS_CAM"]
 description = "A single camera capturing a wide-angle shot of the ATLAS South system."
 
 [[cameras]]

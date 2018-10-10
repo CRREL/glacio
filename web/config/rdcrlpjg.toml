@@ -13,13 +13,13 @@ name = "ATLAS North"
 [[cameras]]
 id = "ATLAS_CAM"
 name = "ATLAS South site"
-path = "/Users/rdcrlpjg/iridiumcam/StarDot/ATLAS_CAM"
+paths = ["/Users/rdcrlpjg/iridiumcam/StarDot/ATLAS_CAM"]
 description = "A wide-angle view of the ATLAS South system."
 
 [[cameras]]
 id = "ATLAS_CAM2"
 name = "ATLAS South scanner"
-path = "/Users/rdcrlpjg/iridiumcam/StarDot/ATLAS_CAM2"
+paths = ["/Users/rdcrlpjg/iridiumcam/StarDot/ATLAS_CAM2"]
 description = "A close-up view of the ATLAS South scanner."
 
 [[cameras]]
@@ -31,7 +31,7 @@ description = "A dual-camera wide-angle view of the ATLAS North system."
 [[cameras]]
 id = "HEL_ATLASNORTH"
 name = "ATLAS North scanner"
-path = "/Users/rdcrlpjg/iridiumcam/StarDot/HEL_ATLASNORTH"
+paths = ["/Users/rdcrlpjg/iridiumcam/StarDot/HEL_ATLASNORTH"]
 description = "A close-up view of the ATLAS North scanner."
 
 [[cameras]]

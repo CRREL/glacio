@@ -1,6 +1,6 @@
 //! Handle HTTP requests.
 
-use actix_web::{error::ErrorNotFound, HttpRequest, Json, Result};
+use actix_web::{error::ErrorNotFound, Error, HttpRequest, Json, Result};
 use atlas::Heartbeat;
 use camera;
 use chrono::{DateTime, Utc};
@@ -26,6 +26,17 @@ pub fn camera(request: &HttpRequest<Config>) -> Result<Json<Camera>> {
         .camera(&id)
         .ok_or(ErrorNotFound("no camera with that id"))
         .and_then(|camera| Ok(Json(Camera::new(camera, request)?)))
+}
+
+/// Returns all images for this camera and subcamera.
+pub fn camera_images(request: &HttpRequest<Config>) -> Result<Json<Vec<Image>>> {
+    let subcamera_id: usize = request.match_info().query("subcamera_id")?;
+    camera_images_for_subcamera(subcamera_id, request)
+}
+
+/// Returns all images for this camera and the default subcamera.
+pub fn camera_images_default(request: &HttpRequest<Config>) -> Result<Json<Vec<Image>>> {
+    camera_images_for_subcamera(0, request)
 }
 
 /// Returns a list of all ATLAS sites.
@@ -81,11 +92,13 @@ pub struct Camera {
     /// The API url for this camera.
     pub url: String,
 
-    /// Is this camera a dual camera?
-    pub is_dual: bool,
-
     /// The latest image taken by this camera.
     pub latest_image: Option<Image>,
+
+    /// The number of subcameras in this camera.
+    ///
+    /// Single cameras have one subcamera, dual cameras have two.
+    pub subcamera_count: usize,
 }
 
 /// An image taken by a remote camera.
@@ -108,7 +121,7 @@ impl Camera {
                 .url_for("camera", &[camera.id()])?
                 .as_str()
                 .to_string(),
-            is_dual: camera.is_dual(),
+            subcamera_count: camera.subcamera_count(),
             latest_image: camera
                 .latest_image()
                 .map(|i| Image::new(&i, request))
@@ -135,4 +148,33 @@ impl Site {
             latest_heartbeat: request.state().latest_heartbeat(site.id()),
         })
     }
+}
+
+fn camera_images_for_subcamera(
+    subcamera_id: usize,
+    request: &HttpRequest<Config>,
+) -> Result<Json<Vec<Image>>> {
+    let id: String = request.match_info().query("id")?;
+    request
+        .state()
+        .camera(&id)
+        .ok_or(ErrorNotFound("no camera with that id"))
+        .and_then(|camera| {
+            camera
+                .path(subcamera_id)
+                .ok_or(ErrorNotFound("no subcamera with that id"))
+        })
+        .and_then(|path| {
+            camera::Camera::from_path(path)
+                .images()
+                .map_err(Error::from)
+        })
+        .map(|images| {
+            Json(
+                images
+                    .into_iter()
+                    .filter_map(|image| Image::new(&image, request).ok())
+                    .collect(),
+            )
+        })
 }

@@ -14,7 +14,6 @@
 
 use atlas;
 use camera;
-use failure::Error;
 use std::path::{Path, PathBuf};
 use url::Url;
 
@@ -41,42 +40,20 @@ pub struct Config {
 
 /// Camera configuration.
 #[derive(Clone, Debug, Deserialize, PartialEq)]
-#[serde(untagged)]
-pub enum Camera {
-    /// A single camera.
+pub struct Camera {
+    /// The name of the camera, more descriptive.
+    name: String,
+
+    /// The id of the camera, shorter and more slug-like.
+    id: String,
+
+    /// A longer description of the camera.
+    description: String,
+
+    /// The directories that hold the camera's images.
     ///
-    /// Only one camera in the box, nice and simple.
-    Single {
-        /// The name of the camera, more descriptive.
-        name: String,
-
-        /// The id of the camera, shorter and more slug-like.
-        id: String,
-
-        /// A longer description of the camera.
-        description: String,
-
-        /// The directory that holds the camera's images.
-        path: PathBuf,
-    },
-
-    /// A dual camera.
-    ///
-    /// There's two images in the box. Though the whole box has one name and id, there's two images
-    /// that come off of it for each snapshot.
-    Dual {
-        /// The name of the camera, a more descriptive string.
-        name: String,
-
-        /// The id of the camera, a short string.
-        id: String,
-
-        /// A longer description of the camera.
-        description: String,
-
-        /// The two image directory paths.
-        paths: [PathBuf; 2],
-    },
+    /// Single cameras only have on path, dual cameras have two.
+    paths: Vec<PathBuf>,
 }
 
 /// ATLAS site configuration.
@@ -97,7 +74,7 @@ impl Config {
     /// ```
     /// let config = web::Config::from_path("fixtures/config.toml").unwrap();
     /// ```
-    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Config, ::failure::Error> {
         use std::fs::File;
         use std::io::Read;
         use toml;
@@ -105,7 +82,7 @@ impl Config {
         let mut file = File::open(path)?;
         let mut string = String::new();
         file.read_to_string(&mut string)?;
-        toml::from_str(&string).map_err(Error::from)
+        toml::from_str(&string).map_err(::failure::Error::from)
     }
 
     /// Returns this configuration's camera configurations.
@@ -145,7 +122,7 @@ impl Config {
     /// let url = config.image_url(&image).unwrap();
     /// assert_eq!("http://iridiumcam.lidar.io/ATLAS_CAM/ATLAS_CAM_20180614_120000.jpg", url);
     /// ```
-    pub fn image_url(&self, image: &camera::Image) -> Result<String, Error> {
+    pub fn image_url(&self, image: &camera::Image) -> Result<String, ::failure::Error> {
         let path = image.path();
         let child = path.strip_prefix(&self.image_document_root)?;
         let url = Url::parse(&self.image_server)?.join(child.to_string_lossy().as_ref())?;
@@ -207,9 +184,7 @@ impl Camera {
     /// assert_eq!("ATLAS_CAM", camera.id());
     /// ```
     pub fn id(&self) -> &str {
-        match *self {
-            Camera::Single { ref id, .. } | Camera::Dual { ref id, .. } => id.as_str(),
-        }
+        self.id.as_str()
     }
 
     /// Returns this camera's name.
@@ -224,9 +199,7 @@ impl Camera {
     /// assert_eq!("ATLAS_CAM", camera.name());
     /// ```
     pub fn name(&self) -> &str {
-        match *self {
-            Camera::Single { ref name, .. } | Camera::Dual { ref name, .. } => name.as_str(),
-        }
+        self.name.as_str()
     }
 
     /// Returns this camera's description.
@@ -239,39 +212,12 @@ impl Camera {
     /// assert_eq!("", camera.description());
     /// ```
     pub fn description(&self) -> &str {
-        match *self {
-            Camera::Single {
-                ref description, ..
-            }
-            | Camera::Dual {
-                ref description, ..
-            } => description.as_str(),
-        }
-    }
-
-    /// Returns true if this is a dual camera.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use web::Config;
-    /// let config = Config::from_path("fixtures/config.toml").unwrap();
-    /// assert!(!config.camera("ATLAS_CAM").unwrap().is_dual());
-    /// assert!(config.camera("DUAL_CAM").unwrap().is_dual());
-    /// ```
-    pub fn is_dual(&self) -> bool {
-        match *self {
-            Camera::Single { .. } => false,
-            Camera::Dual { .. } => true,
-        }
+        self.description.as_str()
     }
 
     /// Returns the latest image for this camera.
     ///
-    /// In the case of dual cameras, returns the most recent image from either camera. If there's a
-    /// tie, prefers an image from the first camera.
-    ///
-    /// If the camera doesn't have any images in it, or doesn't point to a directory, returns None.
+    /// Uses the first path in the paths array.
     ///
     /// # Examples
     ///
@@ -281,27 +227,39 @@ impl Camera {
     /// let image = camera.latest_image().unwrap();
     /// ```
     pub fn latest_image(&self) -> Option<camera::Image> {
-        match *self {
-            Camera::Single { ref path, .. } => camera::Camera::from_path(path).latest_image(),
-            Camera::Dual { ref paths, .. } => {
-                let mut images: Vec<_> = paths
-                    .iter()
-                    .filter_map(|path| camera::Camera::from_path(path).latest_image())
-                    .collect();
-                match images.len() {
-                    0 | 1 => images.pop(),
-                    2 => {
-                        if images[0].datetime() == images[1].datetime() {
-                            Some(images.remove(0))
-                        } else {
-                            images.sort();
-                            images.pop()
-                        }
-                    }
-                    _ => unreachable!(),
-                }
-            }
-        }
+        self.paths
+            .get(0)
+            .map(|path| camera::Camera::from_path(path))
+            .and_then(|camera| camera.images().ok())
+            .and_then(|mut images| images.pop())
+    }
+
+    /// The number of subcameras in this camera.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let config = web::Config::from_path("fixtures/config.toml").unwrap();
+    /// assert_eq!(1, config.camera("ATLAS_CAM").unwrap().subcamera_count());
+    /// assert_eq!(2, config.camera("DUAL_CAM").unwrap().subcamera_count());
+    /// ```
+    pub fn subcamera_count(&self) -> usize {
+        self.paths.len()
+    }
+
+    /// Images for the specified subcamera.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use web::config::Camera;
+    /// let camera = Camera::from("fixtures/ATLAS_CAM");
+    /// let images = camera.path(0).unwrap();
+    /// ```
+    pub fn path(&self, subcamera_id: usize) -> Option<&Path> {
+        self.paths
+            .get(subcamera_id)
+            .map(|path_buf| path_buf.as_path())
     }
 }
 
@@ -312,10 +270,10 @@ impl<P: AsRef<Path>> From<P> for Camera {
             .file_name()
             .map(|file_name| file_name.to_string_lossy().to_string())
             .unwrap_or_else(String::new);
-        Camera::Single {
+        Camera {
             id: file_name.clone(),
             name: file_name,
-            path: path.as_ref().to_path_buf(),
+            paths: vec![path.as_ref().to_path_buf()],
             description: String::new(),
         }
     }
