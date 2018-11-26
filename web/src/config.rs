@@ -169,6 +169,20 @@ impl Config {
             .and_then(|site| site.heartbeats(&self.iridium_sbd_root).ok())
             .and_then(|mut heartbeats| heartbeats.pop())
     }
+
+    /// Returns all heartbeats from the provided site.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// let config = web::Config::from_path("fixtures/config.toml").unwrap();
+    /// let heartbeats = config.heartbeats("north").unwrap();
+    /// ```
+    pub fn heartbeats(&self, id: &str) -> Result<Vec<atlas::Heartbeat>, ::failure::Error> {
+        id.parse::<atlas::Site>()
+            .map_err(::failure::Error::from)
+            .and_then(|site| site.heartbeats(&self.iridium_sbd_root))
+    }
 }
 
 impl Camera {

@@ -38,20 +38,19 @@ pub fn create_app(config: Config) -> App<Config> {
             .resource("/atlas/{id}", |resource| {
                 resource.name("site");
                 resource.h(handler::atlas_site)
-            })
-            .resource("/cameras", |resource| resource.h(handler::cameras))
+            }).resource("/atlas/{id}/heartbeats", |resource| {
+                resource.name("heartbeats");
+                resource.h(handler::atlas_site_heartbeats)
+            }).resource("/cameras", |resource| resource.h(handler::cameras))
             .resource("/cameras/{id}", |resource| {
                 resource.name("camera");
                 resource.h(handler::camera)
-            })
-            .resource("/cameras/{id}/images", |resource| {
+            }).resource("/cameras/{id}/images", |resource| {
                 resource.h(handler::camera_images_default)
-            })
-            .resource("/cameras/{id}/images/{subcamera_id}", |resource| {
+            }).resource("/cameras/{id}/images/{subcamera_id}", |resource| {
                 resource.name("camera_images");
                 resource.h(handler::camera_images)
-            })
-            .register()
+            }).register()
     })
 }
 
@@ -61,6 +60,7 @@ mod tests {
     use actix_web::http::Method;
     use actix_web::test::TestServer;
     use actix_web::HttpMessage;
+    use atlas::Heartbeat;
     use handler::{Camera, Image, Site};
     use serde::de::DeserializeOwned;
     use serde_json;
@@ -98,6 +98,11 @@ mod tests {
         assert_eq!("ATLAS North", site.name);
         assert_eq!("north", site.id);
         assert!(site.url.ends_with("/atlas/north"));
+    }
+
+    #[test]
+    fn site_heartbeats() {
+        let _heartbeats: Vec<Heartbeat> = get("/atlas/north/heartbeats");
     }
 
     fn test_state() -> Config {

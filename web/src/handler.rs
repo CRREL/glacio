@@ -61,6 +61,16 @@ pub fn atlas_site(request: &HttpRequest<Config>) -> Result<Json<Site>> {
         .and_then(|site| Ok(Json(Site::new(&site, request)?)))
 }
 
+/// Returns all heartbeats from this site.
+pub fn atlas_site_heartbeats(request: &HttpRequest<Config>) -> Result<Json<Vec<Heartbeat>>> {
+    let id: String = request.match_info().query("id")?;
+    request
+        .state()
+        .heartbeats(&id)
+        .map(|heartbeats| Json(heartbeats))
+        .map_err(Error::from)
+}
+
 /// An ATLAS site.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Site {
@@ -163,13 +173,11 @@ fn camera_images_for_subcamera(
             camera
                 .path(subcamera_id)
                 .ok_or(ErrorNotFound("no subcamera with that id"))
-        })
-        .and_then(|path| {
+        }).and_then(|path| {
             camera::Camera::from_path(path)
                 .images()
                 .map_err(Error::from)
-        })
-        .map(|images| {
+        }).map(|images| {
             Json(
                 images
                     .into_iter()
