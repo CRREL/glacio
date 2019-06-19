@@ -10,6 +10,10 @@ name = "ATLAS South"
 id = "north"
 name = "ATLAS North"
 
+[[atlas]]
+id = "crrel"
+name = "ATLAS CRREL"
+
 [[cameras]]
 id = "ATLAS_CAM"
 name = "ATLAS South site"
