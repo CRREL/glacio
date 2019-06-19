@@ -5,6 +5,7 @@ use Heartbeat;
 
 const IMEI_SOUTH: &str = "300234063554840";
 const IMEI_NORTH: &str = "300234063554810";
+const IMEI_CRREL: &str = "300234063554800";
 
 /// An ATLAS installation.
 #[derive(Debug, PartialEq)]
@@ -14,6 +15,9 @@ pub enum Site {
 
     /// ATLAS-North, installed in 2018.
     North,
+
+    /// ATLAS-CRREL, the test system back home.
+    Crrel,
 }
 
 /// A site error.
@@ -63,11 +67,13 @@ impl Site {
     /// use atlas::Site;
     /// assert_eq!("300234063554810", Site::North.imei());
     /// assert_eq!("300234063554840", Site::South.imei());
+    /// assert_eq!("300234063554800", Site::Crrel.imei());
     /// ```
     pub fn imei(&self) -> &str {
         match *self {
             Site::South => IMEI_SOUTH,
             Site::North => IMEI_NORTH,
+            Site::Crrel => IMEI_CRREL,
         }
     }
 }
@@ -78,6 +84,7 @@ impl FromStr for Site {
         match s.to_lowercase().as_str() {
             "south" => Ok(Site::South),
             "north" => Ok(Site::North),
+            "crrel" => Ok(Site::Crrel),
             _ => Err(Error::SiteName(s.to_string())),
         }
     }
@@ -114,6 +121,9 @@ mod tests {
         assert_eq!(Site::North, "north".parse().unwrap());
         assert_eq!(Site::North, "North".parse().unwrap());
         assert_eq!(Site::North, "NORTH".parse().unwrap());
+        assert_eq!(Site::Crrel, "crrel".parse().unwrap());
+        assert_eq!(Site::Crrel, "Crrel".parse().unwrap());
+        assert_eq!(Site::Crrel, "CRREL".parse().unwrap());
         assert!("notasite".parse::<Site>().is_err());
     }
 }

@@ -77,7 +77,6 @@ impl Config {
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Config, ::failure::Error> {
         use std::fs::File;
         use std::io::Read;
-        use toml;
 
         let mut file = File::open(path)?;
         let mut string = String::new();
