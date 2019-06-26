@@ -26,6 +26,21 @@ fn main() {
         }
     }
 
+    if let Some(matches) = matches.subcommand_matches("bad-heartbeat") {
+        let site: Site = matches.value_of("SITE").unwrap().parse().unwrap();
+        if let Some(error) = site
+            .bad_heartbeats(matches.value_of("ROOT").unwrap())
+            .unwrap()
+            .into_iter()
+            .last()
+        {
+            println!("{}", error);
+            println!("{}", error.backtrace());
+        } else {
+            panic!("No bad heartbeats available");
+        }
+    }
+
     if let Some(matches) = matches.subcommand_matches("heartbeats") {
         let site: Site = matches.value_of("SITE").unwrap().parse().unwrap();
         let heartbeats = site.heartbeats(matches.value_of("ROOT").unwrap()).unwrap();

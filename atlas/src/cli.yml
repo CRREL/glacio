@@ -13,6 +13,17 @@ subcommands:
                 help: the root of the Iridium SBD messages on the filesystem
                 required: true
                 index: 2
+    - bad-heartbeat:
+        about: prints the latest error message from a bad heartbeat from the specified system
+        args:
+            - SITE:
+                help: the ATLAS site to grab the bad heartbeat from
+                required: true
+                index: 1
+            - ROOT:
+                help: the root of the Iridium SBD messages on the filesystem
+                required: true
+                index: 2
     - heartbeats:
         about: prints all heartbeats from the specified system
         args:

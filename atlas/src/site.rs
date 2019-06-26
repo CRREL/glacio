@@ -45,6 +45,25 @@ impl Site {
             .collect())
     }
 
+    /// Returns a vector of this site's bad heartbeats inside the provided sbd root directory.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use atlas::Site;
+    /// let heartbeats = Site::North.bad_heartbeats("/var/iridium").unwrap();
+    /// ```
+    pub fn bad_heartbeats<P: AsRef<Path>>(
+        &self,
+        path: P,
+    ) -> Result<Vec<::failure::Error>, ::failure::Error> {
+        let storage = FilesystemStorage::open(path)?;
+        Ok(reassemble(storage.messages_from_imei(self.imei())?)?
+            .into_iter()
+            .filter_map(|message| Heartbeat::new(&message).err())
+            .collect())
+    }
+
     /// Returns the latest heartbeat.
     ///
     /// If there are any errors or there are no heartbeats, returns None.
