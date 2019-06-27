@@ -41,6 +41,20 @@ fn main() {
         }
     }
 
+    if let Some(matches) = matches.subcommand_matches("message") {
+        let site: Site = matches.value_of("SITE").unwrap().parse().unwrap();
+        if let Some(message) = site
+            .messages(matches.value_of("ROOT").unwrap())
+            .unwrap()
+            .into_iter()
+            .last()
+        {
+            println!("{:?}", message);
+        } else {
+            panic!("No messages available");
+        }
+    }
+
     if let Some(matches) = matches.subcommand_matches("heartbeats") {
         let site: Site = matches.value_of("SITE").unwrap().parse().unwrap();
         let heartbeats = site.heartbeats(matches.value_of("ROOT").unwrap()).unwrap();

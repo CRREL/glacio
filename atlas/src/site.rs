@@ -38,8 +38,8 @@ impl Site {
     /// let heartbeats = Site::North.heartbeats("/var/iridium").unwrap();
     /// ```
     pub fn heartbeats<P: AsRef<Path>>(&self, path: P) -> Result<Vec<Heartbeat>, ::failure::Error> {
-        let storage = FilesystemStorage::open(path)?;
-        Ok(reassemble(storage.messages_from_imei(self.imei())?)?
+        Ok(self
+            .messages(path)?
             .into_iter()
             .filter_map(|message| Heartbeat::new(&message).ok())
             .collect())
@@ -57,11 +57,29 @@ impl Site {
         &self,
         path: P,
     ) -> Result<Vec<::failure::Error>, ::failure::Error> {
-        let storage = FilesystemStorage::open(path)?;
-        Ok(reassemble(storage.messages_from_imei(self.imei())?)?
+        Ok(self
+            .messages(path)?
             .into_iter()
             .filter_map(|message| Heartbeat::new(&message).err())
             .collect())
+    }
+
+    /// Returns a vector of all the reassmbled messages for this site.
+    ///
+    /// One message can be split up over multiple SBD messages if they're long.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use atlas::Site;
+    /// let messages = Site::North.messages("/var/iridium").unwrap();
+    /// ```
+    pub fn messages<P: AsRef<Path>>(
+        &self,
+        path: P,
+    ) -> Result<Vec<::sutron::Message>, ::failure::Error> {
+        let storage = FilesystemStorage::open(path)?;
+        Ok(reassemble(storage.messages_from_imei(self.imei())?)?)
     }
 
     /// Returns the latest heartbeat.
